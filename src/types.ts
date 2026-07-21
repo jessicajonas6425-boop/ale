@@ -44,6 +44,7 @@ export interface Banco {
   position: number;
   certificationRequired: boolean;
   category?: string;
+  defaultCommission?: number;
 }
 
 export type VendaStatus = 

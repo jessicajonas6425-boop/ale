@@ -50,23 +50,50 @@ export const ChamadosView: React.FC<ChamadosViewProps> = ({
     setShowModal(true);
   };
 
+  const SUPPORT_WHATSAPP_NUMBER = '5593992367913';
+
+  const getWhatsAppSupportUrl = (ticket: {
+    ticketNumber: string;
+    type: string;
+    corretorName: string;
+    title: string;
+    priority: string;
+    description: string;
+  }) => {
+    const text = `*SOLICITAÇÃO DE SUPORTE - GRUPO ALEXANDRITA* 💎\n\n` +
+      `🎫 *Ticket:* ${ticket.ticketNumber}\n` +
+      `👤 *Solicitante:* ${ticket.corretorName}\n` +
+      `📌 *Tipo:* ${ticket.type}\n` +
+      `⚡ *Prioridade:* ${ticket.priority}\n` +
+      `📝 *Assunto:* ${ticket.title}\n` +
+      `💬 *Descrição:* ${ticket.description}\n\n` +
+      `_Enviado pelo CRM do Grupo Alexandrita_`;
+    return `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) return;
 
     const nextTicketNum = `TKT-${1040 + userChamados.length + Math.floor(Math.random() * 50)}`;
 
-    onAddChamado({
+    const newChamado = {
       ticketNumber: nextTicketNum,
       type: selectedType,
       corretorId: currentUser.uid,
       corretorName: currentUser.name,
       title,
       description,
-      status: 'Aberto',
+      status: 'Aberto' as ChamadoStatus,
       createdAt: new Date().toISOString(),
       priority,
-    });
+    };
+
+    onAddChamado(newChamado);
+
+    // Abrir WhatsApp de Suporte
+    const waUrl = getWhatsAppSupportUrl(newChamado);
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
 
     setTitle('');
     setDescription('');
@@ -170,14 +197,26 @@ export const ChamadosView: React.FC<ChamadosViewProps> = ({
 
       {/* Tickets List */}
       <div className="bg-white rounded-2xl border border-teal-100 shadow-xs p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-[#007A78]" />
             <h3 className="font-bold text-slate-900 text-base">Histórico de Chamados & Tickets</h3>
           </div>
-          <span className="text-xs font-semibold text-slate-500">
-            Total: {userChamados.length} chamados
-          </span>
+          <div className="flex items-center gap-3">
+            <a
+              href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5"
+              title="Abrir WhatsApp de Suporte (+55 93 99236-7913)"
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-600 fill-emerald-100" />
+              <span>Suporte WhatsApp: (93) 99236-7913</span>
+            </a>
+            <span className="text-xs font-semibold text-slate-500">
+              Total: {userChamados.length} chamados
+            </span>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -199,8 +238,18 @@ export const ChamadosView: React.FC<ChamadosViewProps> = ({
                     <span className="font-bold text-slate-900 text-sm">{ticket.title}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {getStatusBadge(ticket.status)}
+                    <a
+                      href={getWhatsAppSupportUrl(ticket)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+                      title="Enviar resumo do chamado p/ WhatsApp +55 93 99236-7913"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                      <span>WhatsApp Suporte</span>
+                    </a>
                     {currentUser.role === 'admin' && (
                       <button
                         onClick={() => {
@@ -250,10 +299,15 @@ export const ChamadosView: React.FC<ChamadosViewProps> = ({
       {showModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-teal-100">
-            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
               <Ticket className="w-5 h-5 text-[#007A78]" />
               <span>Abrir Chamado: {selectedType}</span>
             </h3>
+
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-900 font-semibold">
+              <MessageSquare className="w-4 h-4 text-emerald-600 flex-shrink-0 fill-emerald-200" />
+              <span>Ao salvar, o resumo será enviado para o WhatsApp de suporte: <strong>+55 93 99236-7913</strong></span>
+            </div>
 
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
@@ -317,9 +371,10 @@ export const ChamadosView: React.FC<ChamadosViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#007A78] hover:bg-[#005B58] text-white rounded-xl text-xs font-bold transition-colors"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
                 >
-                  Enviar Chamado
+                  <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                  <span>Enviar e Abrir WhatsApp</span>
                 </button>
               </div>
             </form>

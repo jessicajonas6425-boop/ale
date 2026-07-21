@@ -286,6 +286,32 @@ export default function App() {
     }
   };
 
+  const handleUpdateTabela = async (id: string, updatedData: Partial<TabelaComissao>) => {
+    try {
+      const ref = doc(db, 'tabelas', id);
+      await updateDoc(ref, updatedData);
+    } catch (e) {
+      setTabelas(prev => prev.map(t => t.id === id ? { ...t, ...updatedData } : t));
+    }
+  };
+
+  const handleDeleteTabela = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'tabelas', id));
+    } catch (e) {
+      setTabelas(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const handleUpdateBancoCommission = async (bancoId: string, defaultCommission: number) => {
+    try {
+      const ref = doc(db, 'bancos', bancoId);
+      await updateDoc(ref, { defaultCommission });
+    } catch (e) {
+      setBancos(prev => prev.map(b => b.id === bancoId ? { ...b, defaultCommission } : b));
+    }
+  };
+
   const handleAddChamado = async (chamadoData: Omit<Chamado, 'id'>) => {
     try {
       await addDoc(collection(db, 'chamados'), chamadoData);
@@ -453,6 +479,9 @@ export default function App() {
               bancos={bancos}
               currentUser={currentUser}
               onAddTabela={handleAddTabela}
+              onUpdateTabela={handleUpdateTabela}
+              onDeleteTabela={handleDeleteTabela}
+              onUpdateBancoCommission={handleUpdateBancoCommission}
             />
           )}
 
