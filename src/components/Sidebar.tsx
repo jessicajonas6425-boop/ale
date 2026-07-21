@@ -10,8 +10,7 @@ import {
   Users, 
   UserCircle,
   LogOut,
-  ShieldAlert,
-  Sparkles,
+  ShieldCheck,
   ChevronRight
 } from 'lucide-react';
 import { Logo } from './Logo';
@@ -33,7 +32,7 @@ interface SidebarProps {
   setActiveTab: (tab: ActiveTab) => void;
   currentUser: UserProfile;
   onLogout: () => void;
-  onToggleRole: () => void;
+  onToggleRole?: () => void;
   isOpenMobile?: boolean;
   setIsOpenMobile?: (open: boolean) => void;
 }
@@ -43,7 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   currentUser,
   onLogout,
-  onToggleRole,
   isOpenMobile,
   setIsOpenMobile
 }) => {
@@ -140,21 +138,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Card & Footer Controls */}
         <div className="p-4 border-t border-white/10 bg-black/20 space-y-3">
-          {/* Demo Role Switcher */}
-          <button
-            onClick={onToggleRole}
-            className="w-full flex items-center justify-between px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-teal-100 transition-colors"
-            title="Clique para alternar entre perfil Admin e Corretor no ambiente de teste"
-            id="role-toggle-btn"
-          >
+          {/* Static Session Status Badge */}
+          <div className={`flex items-center justify-between p-2.5 rounded-xl text-xs border ${
+            currentUser.role === 'admin' 
+              ? 'bg-amber-500/10 border-amber-500/20 text-amber-200'
+              : 'bg-teal-500/10 border-teal-500/20 text-teal-200'
+          }`}>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#3CE5DB]" />
-              <span>Modo: <strong className="text-white uppercase">{currentUser.role}</strong></span>
+              <ShieldCheck className={`w-4 h-4 ${currentUser.role === 'admin' ? 'text-amber-400' : 'text-emerald-400'}`} />
+              <span className="font-extrabold text-[11px] uppercase tracking-wider">
+                {currentUser.role === 'admin' ? 'Sessão Administrador' : 'Sessão Corretor'}
+              </span>
             </div>
-            <span className="text-[10px] bg-[#007A78] hover:bg-[#006361] text-white px-2 py-0.5 rounded-lg uppercase font-bold tracking-wider">
-              Alternar
+            <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+              currentUser.role === 'admin'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+            }`}>
+              {currentUser.role === 'admin' ? 'Admin' : 'Ativo'}
             </span>
-          </button>
+          </div>
 
           {/* User Profile Summary */}
           <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/10">
@@ -167,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${currentUser.role === 'admin' ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
                   <p className="text-[10px] text-teal-200 uppercase tracking-tight font-medium">
-                    {currentUser.role === 'admin' ? 'Administrador' : 'Corretor'}
+                    {currentUser.role === 'admin' ? 'Administrador' : 'Corretor Autorizado'}
                   </p>
                 </div>
               </div>

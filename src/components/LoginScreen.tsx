@@ -28,7 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     }
 
     // Admin Credentials Check
-    if (trimmedEmail === 'alexandrita@x.com') {
+    if (trimmedEmail === 'alexandrita@x.com' || trimmedEmail === 'admin@grupoalexandrita.com.br') {
       if (password !== 'alexandrita4321') {
         setErrorMsg('Senha incorreta para a conta de Administrador.');
         return;
@@ -38,7 +38,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         id: 'admin-alexandrita-id',
         uid: 'admin-alexandrita-uid',
         name: 'Ana Carolina Alexandrita (Admin)',
-        email: 'alexandrita@x.com',
+        email: trimmedEmail,
         cpf: '123.456.789-00',
         phone: '(11) 98765-4321',
         role: 'admin',
