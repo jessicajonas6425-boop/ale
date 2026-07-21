@@ -53,7 +53,34 @@ export const INITIAL_BANCOS: Omit<Banco, 'id'>[] = [
   { name: 'Finanto', code: '917', loginUrl: 'https://finanto.joinbank.com.br/sign-in?redirectURL=%2Fmain', status: 'ATIVO', position: 18, certificationRequired: false, category: 'JoinBank & Finanto', defaultCommission: 12.0 },
 ];
 
-export const INITIAL_VENDEDORES: Omit<UserProfile, 'id'>[] = [];
+export const INITIAL_VENDEDORES: Omit<UserProfile, 'id'>[] = [
+  {
+    uid: 'corretor-carlos-1',
+    name: 'Carlos Eduardo Silva',
+    email: 'carlos.silva@grupoalexandrita.com.br',
+    password: '123456',
+    cpf: '234.567.890-11',
+    phone: '(11) 97654-3210',
+    role: 'corretor',
+    status: 'ATIVO',
+    createdAt: '2026-07-01T10:00:00Z',
+    referralCode: 'CARLOS2026',
+    payoutInfo: { pixKey: '234.567.890-11', bankName: 'Itaú Consignado' }
+  },
+  {
+    uid: 'corretor-mariana-2',
+    name: 'Mariana Oliveira Santos',
+    email: 'mariana.santos@grupoalexandrita.com.br',
+    password: '123456',
+    cpf: '345.678.901-22',
+    phone: '(11) 98888-7777',
+    role: 'corretor',
+    status: 'ATIVO',
+    createdAt: '2026-07-05T14:30:00Z',
+    referralCode: 'MARI2026',
+    payoutInfo: { pixKey: 'mariana.santos@grupoalexandrita.com.br', bankName: 'Banco Pan' }
+  }
+];
 
 export const INITIAL_VENDAS: Omit<Venda, 'id'>[] = [];
 

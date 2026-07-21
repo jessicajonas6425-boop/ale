@@ -410,7 +410,13 @@ export default function App() {
   };
 
   if (!currentUser) {
-    return <LoginScreen onLoginSuccess={setCurrentUser} />;
+    return (
+      <LoginScreen 
+        onLoginSuccess={setCurrentUser} 
+        vendedores={vendedores}
+        onRegisterUser={handleAddVendedor}
+      />
+    );
   }
 
   return (

@@ -1,33 +1,41 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeOff, UserCheck, ShieldAlert } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: UserProfile) => void;
+  vendedores?: UserProfile[];
+  onRegisterUser?: (user: Omit<UserProfile, 'id'>) => Promise<void> | void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  onLoginSuccess,
+  vendedores = [],
+  onRegisterUser
+}) => {
   const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
   const [phone, setPhone] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     const trimmedEmail = email.trim().toLowerCase();
 
     if (!trimmedEmail || !password) {
-      setErrorMsg('Por favor, preencha e-mail e senha.');
+      setErrorMsg('Por favor, preencha o e-mail e a senha para prosseguir.');
       return;
     }
 
-    // Admin Credentials Check
+    // 1. ADMIN LOGIN CHECK
     if (trimmedEmail === 'alexandrita@x.com' || trimmedEmail === 'admin@grupoalexandrita.com.br') {
       if (password !== 'alexandrita4321') {
         setErrorMsg('Senha incorreta para a conta de Administrador.');
@@ -50,24 +58,85 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Standard Corretor Login / Registration
-    if (password.length < 4) {
-      setErrorMsg('A senha deve ter no mínimo 4 caracteres.');
+    // 2. REGISTER NEW CORRETOR MODE
+    if (isRegister) {
+      if (!name.trim()) {
+        setErrorMsg('Por favor, digite seu nome completo.');
+        return;
+      }
+      if (!cpf.trim()) {
+        setErrorMsg('Por favor, informe seu CPF.');
+        return;
+      }
+      if (!phone.trim()) {
+        setErrorMsg('Por favor, informe seu número de WhatsApp.');
+        return;
+      }
+      if (password.length < 4) {
+        setErrorMsg('A senha deve conter no mínimo 4 caracteres.');
+        return;
+      }
+
+      // Check if email is already registered
+      const existingUser = vendedores.find(v => v.email?.trim().toLowerCase() === trimmedEmail);
+      if (existingUser) {
+        setErrorMsg('Este e-mail já possui um cadastro ativo no sistema. Clique em "Faça login" para entrar.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const newUser: Omit<UserProfile, 'id'> = {
+          uid: `uid-${Date.now()}`,
+          name: name.trim(),
+          email: trimmedEmail,
+          password: password,
+          cpf: cpf.trim(),
+          phone: phone.trim(),
+          role: 'corretor',
+          status: 'ATIVO',
+          createdAt: new Date().toISOString(),
+          referralCode: `ALEX-${Math.floor(1000 + Math.random() * 9000)}`
+        };
+
+        if (onRegisterUser) {
+          await onRegisterUser(newUser);
+        }
+
+        // Successfully registered -> log user in
+        onLoginSuccess({
+          id: `user-${Date.now()}`,
+          ...newUser
+        });
+      } catch (err) {
+        setErrorMsg('Ocorreu um erro ao registrar a conta. Tente novamente.');
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
-    onLoginSuccess({
-      id: `user-${Date.now()}`,
-      uid: `uid-${Date.now()}`,
-      name: name || (trimmedEmail.split('@')[0] + ' (Corretor)'),
-      email: trimmedEmail,
-      cpf: cpf || '234.567.890-11',
-      phone: phone || '(11) 99999-8888',
-      role: 'corretor',
-      status: 'ATIVO',
-      createdAt: new Date().toISOString(),
-      referralCode: `ALEX-${Math.floor(1000 + Math.random() * 9000)}`
-    });
+    // 3. CORRETOR LOGIN MODE (STRICT REGISTERED USERS ONLY)
+    const foundUser = vendedores.find(v => v.email?.trim().toLowerCase() === trimmedEmail);
+
+    if (!foundUser) {
+      setErrorMsg('Acesso não permitido: Este e-mail não possui cadastro no sistema. Por favor, clique no botão de cadastro abaixo para se registrar.');
+      return;
+    }
+
+    if (foundUser.status === 'INATIVO') {
+      setErrorMsg('Conta inativa no sistema. Entre em contato com o suporte ou administrador do Grupo Alexandrita.');
+      return;
+    }
+
+    // Verify Password if stored on account
+    if (foundUser.password && foundUser.password !== password) {
+      setErrorMsg('Senha incorreta! Verifique sua senha e tente novamente.');
+      return;
+    }
+
+    // Login successful
+    onLoginSuccess(foundUser);
   };
 
   return (
@@ -96,13 +165,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <p className="text-xs text-slate-500">
               {isRegister
                 ? 'Preencha seus dados para criar sua conta no Grupo Alexandrita'
-                : 'Digite suas credenciais de acesso corporativo'}
+                : 'Apenas corretores cadastrados possuem acesso ao sistema'}
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold">
-              {errorMsg}
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-start gap-2.5 shadow-xs">
+              <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -152,13 +222,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">E-mail Corporativo</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400 pointer-events-none" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alexandrita@x.com"
+                  placeholder="seu.email@exemplo.com"
                   className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:border-[#007A78] focus:bg-white outline-none"
                 />
               </div>
@@ -167,21 +237,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Senha</label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400 pointer-events-none" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:border-[#007A78] focus:bg-white outline-none"
+                  className="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:border-[#007A78] focus:bg-white outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  title={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-[#007A78] to-[#005B58] text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-gradient-to-r from-[#007A78] to-[#005B58] hover:from-[#006866] hover:to-[#004D4A] text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group disabled:opacity-60 cursor-pointer"
               id="submit-login-btn"
             >
               <span>{isRegister ? 'Concluir Cadastro' : 'Entrar na Plataforma'}</span>
@@ -196,7 +275,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 setIsRegister(!isRegister);
                 setErrorMsg('');
               }}
-              className="text-xs font-bold text-[#007A78] hover:underline"
+              className="text-xs font-bold text-[#007A78] hover:underline cursor-pointer"
             >
               {isRegister ? 'Já possui uma conta? Faça login' : 'Não tem conta? Cadastre-se como corretor'}
             </button>

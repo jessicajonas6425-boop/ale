@@ -31,6 +31,7 @@ export interface UserProfile {
     comprovanteUrl?: string;
   };
   referralCode?: string;
+  password?: string;
   createdAt: string;
 }
 
