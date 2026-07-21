@@ -1,0 +1,6 @@
+{
+  "name": "Grupo Alexandrita",
+  "description": "CRM completo para corretores de crédito consignado - Grupo Alexandrita",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
